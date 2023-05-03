@@ -1,0 +1,19 @@
+dataset:
+  split: false
+  feature_type: 'audio'
+  target_type: 'audio'
+  feature_source: 'dir'
+  target_source: 'dir'
+  train:
+    train_dir: '../data/raw_data/aud_dset/train_files'
+    features: '../data/raw_data/aud_dset/features'
+    targets: '../data/raw_data/aud_dset/targets'
+  valid:
+    valid_dir: '../data/raw_data/aud_dset/valid_files'
+    features: '../data/raw_data/aud_dset/features'
+    targets: '../data/raw_data/aud_dset/targets'
+  test:
+    features: ''
+data:
+  sample_rate: 44100
+  max_duration: 2

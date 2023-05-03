@@ -1,0 +1,23 @@
+dataset:
+  split: false
+  feature_type: 'audio'
+  target_type: 'audio'
+  feature_source: 'column'
+  target_source: 'column'
+  train:
+    train_dir: '../data/raw_data/aud_dset/train_files'
+    train_file: '../data/raw_data/aud_dset/train.csv'
+    features: 'file_name'
+    targets: 'class_labels'
+  valid:
+    valid_dir: '../data/raw_data/aud_dset/valid_files'
+    valid_file: '../data/raw_data/aud_dset/valid.csv'
+    features: 'file_name'
+    targets: 'class_labels'
+  test:
+    features: ''
+    targets: ''
+
+data:
+  sample_rate: 44100
+  max_duration: 2
