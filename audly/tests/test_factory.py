@@ -3,6 +3,29 @@ from functools import wraps
 from .test_suite import TEST_SUITE
 
 
+class TEST_BUNDLE:
+    def __init__(self, bundle_name=''):
+        self.bundle_name = bundle_name
+        TEST_SUITE.test_bundles.append(self)
+        self.subtests = []
+    
+    def add_test(self, test_name='', default_params={}, multi=False):
+        def decorator(test_func):
+            default_params['multi'] = multi
+            test_obj = TEST(test_name, test_func, default_params)
+            self.subtests.append(test_obj)
+            return test_obj
+
+        return decorator
+        
+    def __repr__(self):
+        print(f'Test Bundle : {self.bundle_name}')
+        print(f'Number of tests in this bundle: {len(self.subtests)}')
+        print(f'Tests in this bundle: ')
+        for i in range(len(self.subtests)):
+            print(self.subtests[i])
+
+
 class TEST:
     def __init__(self, test_name='', test_function=None, default_params={}):
         self.test_name = test_name

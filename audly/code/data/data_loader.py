@@ -10,12 +10,11 @@
 
 # Use audiofile for faster audio file reading.
 import numpy as np
+import audiofile
 
 from typing import Tuple, Optional
 
-import librosa
-import torchaudio
-from scipy.io import wavfile
+from dask_cuda import LocalCUDACluster
 from dask.distributed import Client
 
 from audly.utils.base import BASE
@@ -28,21 +27,17 @@ def dataloader(load_function):
     
 class DATA_LOADER(BASE):
     def __init__(self, load_function):
-        self.client = Client(processes=False)
+        self.cluster = LocalCUDACluster()
+        self.client = Client(self.cluster, processes=False)
         self.load_function = load_function
         
-    def load_batch(self, features: list, targets: Optional[list])-> Tuple[np.ndarray, np.ndarray]:
-        # Load Everything In Distributed Mode And Also Run Preprocessing And Augmenting In Distributed Mode.
+    def load_batch(self, features: list, targets: Optional[list])-> Tuple[np.ndarray, Optional[np.ndarray]]:
         x, y = self.load_function(features, targets)
-        
-        # Run Preprocessing
-        
-        # Run Augmenting
         
         return x, y
 
 
 @dataloader
 def audio_loader(features, targets):
-    signal, sampling_rate = wavfile.read(audio_path)
+    signal, sampling_rate = audiofile.read(load_path)
     return signal
