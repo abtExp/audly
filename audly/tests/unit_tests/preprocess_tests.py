@@ -18,7 +18,7 @@ def preprocess_creation_test(x, y):
     print(results_x, results_y)
     
 
-@bundle.add_test('preprocess_sample_test', {'x': [[1, 2, 3]], 'y': [[4, 5, 6]]})
+@bundle.add_test('preprocess_sample_test', {'x': [[1, 2, 3], [3, 2, 1]], 'y': [[4, 5, 6], [7, 9, 11]]})
 def preprocess_sample_test(x, y):    
     @preprocess(True)
     def square(inp_arr):

@@ -41,8 +41,7 @@ class TEST:
                 temp_params = {}
                 for key in self.default_params.keys():
                     temp_params[key] = self.default_params[key][i]
-
-                self.test_function(**temp_params)
+                self.test_function(temp_params)
         else:
             del(self.default_params['multi'])
             self.test_function(**self.default_params)
