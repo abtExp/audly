@@ -1,0 +1,10 @@
+dataset:
+  source_type: 'dir'
+  feature_type: 'audio'
+  target_type: 'audio'
+
+  feature_source: 'C:/Users/abtex/Downloads/audios/'
+  target_source: ''
+
+  train_batch_size: 2
+  valid_batch_size: 2

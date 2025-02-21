@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Processing Studio</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(to bottom right, #f9fafb, #f3f4f6);
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            text-align: center;
+            color: #1f2937;
+            margin-bottom: 3rem;
+        }
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: #4b5563;
+            margin-bottom: 1rem;
+        }
+        .button {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+        .button-blue { background-color: #dbeafe; color: #2563eb; }
+        .button-blue:hover { background-color: #bfdbfe; }
+        .button-green { background-color: #d1fae5; color: #059669; }
+        .button-green:hover { background-color: #a7f3d0; }
+        .button-purple { background-color: #ede9fe; color: #7c3aed; }
+        .button-purple:hover { background-color: #ddd6fe; }
+        .button-yellow { background-color: #fef3c7; color: #d97706; }
+        .button-yellow:hover { background-color: #fde68a; }
+        .button-pink { background-color: #fce7f3; color: #db2777; }
+        .button-pink:hover { background-color: #fbcfe8; }
+        .button-indigo { background-color: #e0e7ff; color: #4f46e5; }
+        .button-indigo:hover { background-color: #c7d2fe; }
+        .waveform-container {
+            position: relative;
+            height: 160px;
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 3rem;
+            overflow: hidden;
+        }
+        .waveform {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        .waveform-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0;
+            transition: width 0.1s ease-in-out;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1rem;
+        }
+        .playback-controls {
+            display: flex;
+            gap: 1rem;
+        }
+        .sources, .transcript {
+            margin-bottom: 3rem;
+        }
+        .source-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .transcript-entry {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s;
+        }
+        .transcript-entry:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .transcript-speaker {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+        }
+        .transcript-text {
+            font-size: 0.875rem;
+            color: #4b5563;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Audio Processing Studio</h1>
+        
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <h2>Upload or Record Audio</h2>
+            <div>
+                <button class="button button-blue" id="uploadButton">
+                    &#x2B06; Upload Audio
+                </button>
+                <button class="button button-green" style="margin-left: 1rem;" id="recordButton">
+                    &#x1F3A4; Record Audio
+                </button>
+            </div>
+        </div>
+
+        <div id="audioInterface" class="hidden">
+            <div class="waveform-container">
+                <div id="waveform" class="waveform"></div>
+                <div id="waveformProgress" class="waveform-progress"></div>
+            </div>
+            
+            <div class="controls">
+                <div id="currentTime">0:00</div>
+                <div class="playback-controls">
+                    <button class="button" id="skipBackButton">&#x23EE;</button>
+                    <button class="button button-blue" id="playPauseButton">&#x25B6;</button>
+                    <button class="button" id="skipForwardButton">&#x23ED;</button>
+                </div>
+                <div>3:45</div>
+            </div>
+
+            <div class="sources">
+                <h2>Audio Sources</h2>
+                <div class="source-buttons" id="sourceButtons"></div>
+            </div>
+
+            <div class="transcript">
+                <h2>Transcript</h2>
+                <div id="transcriptEntries"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const uploadButton = document.getElementById('uploadButton');
+            const recordButton = document.getElementById('recordButton');
+            const audioInterface = document.getElementById('audioInterface');
+
+            function showAudioInterface() {
+                audioInterface.classList.remove('hidden');
+                generateWaveform();
+                populateAudioSources();
+                populateTranscript();
+            }
+
+            uploadButton.addEventListener('click', showAudioInterface);
+            recordButton.addEventListener('click', showAudioInterface);
+
+            function generateWaveform() {
+                const waveformElement = document.getElementById('waveform');
+                const waveformContainer = document.querySelector('.waveform-container');
+                const width = waveformContainer.offsetWidth;
+                const height = waveformContainer.offsetHeight;
+
+                // Generate a more realistic audio waveform
+                let path = `M0,${height/2} `;
+                for (let i = 0; i < width; i += 2) {
+                    const amplitude = Math.random() * 0.5 + 0.5; // Random amplitude between 0.5 and 1
+                    const y1 = Math.sin(i * 0.05) * amplitude * height * 0.4 + height / 2;
+                    const y2 = Math.sin((i + 1) * 0.05) * amplitude * height * 0.4 + height / 2;
+                    path += `L${i},${y1} L${i+1},${y2} `;
+                }
+
+                const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                svg.setAttribute("width", "100%");
+                svg.setAttribute("height", "100%");
+                svg.setAttribute("preserveAspectRatio", "none");
+                svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+                svg.innerHTML = `
+                    <defs>
+                        <clipPath id="waveformClip">
+                            <path d="${path}" />
+                        </clipPath>
+                    </defs>
+                    <path d="${path}" fill="none" stroke="#bfdbfe" stroke-width="2" />
+                    <rect id="progressRect" x="0" y="0" width="100%" height="100%" fill="#2563eb" clip-path="url(#waveformClip)" />
+                `;
+
+                waveformElement.innerHTML = '';
+                waveformElement.appendChild(svg);
+            }
+
+            // Playback functionality
+            let isPlaying = false;
+            let playbackProgress = 0;
+            let playbackInterval;
+
+            const playPauseButton = document.getElementById('playPauseButton');
+            const currentTimeElement = document.getElementById('currentTime');
+
+            function togglePlayPause() {
+                isPlaying = !isPlaying;
+                if (isPlaying) {
+                    playPauseButton.innerHTML = '&#x23F8;'; // Pause symbol
+                    playbackInterval = setInterval(updatePlayback, 100);
+                } else {
+                    playPauseButton.innerHTML = '&#x25B6;'; // Play symbol
+                    clearInterval(playbackInterval);
+                }
+            }
+
+            function updatePlayback() {
+                playbackProgress = (playbackProgress + 1) % 101;
+                const progressRect = document.getElementById('progressRect');
+                progressRect.setAttribute('width', `${playbackProgress}%`);
+                const currentTime = (playbackProgress / 100 * 3.45).toFixed(2);
+                currentTimeElement.textContent = formatTime(currentTime);
+            }
+
+            function formatTime(time) {
+                const minutes = Math.floor(time / 60);
+                const seconds = Math.floor(time % 60).toString().padStart(2, '0');
+                return `${minutes}:${seconds}`;
+            }
+
+            playPauseButton.addEventListener('click', togglePlayPause);
+
+            function populateAudioSources() {
+                const sources = [
+                    { name: "Drums", color: "button-blue" },
+                    { name: "Vocals", color: "button-purple" },
+                    { name: "Guitar", color: "button-green" },
+                    { name: "Speaker 1", color: "button-yellow" },
+                    { name: "Speaker 2", color: "button-pink" },
+                    { name: "Ambient", color: "button-indigo" }
+                ];
+
+                const sourceButtonsContainer = document.getElementById('sourceButtons');
+                sourceButtonsContainer.innerHTML = ''; // Clear existing buttons
+                sources.forEach(source => {
+                    const button = document.createElement('button');
+                    button.className = `button ${source.color}`;
+                    button.textContent = source.name;
+                    sourceButtonsContainer.appendChild(button);
+                });
+            }
+
+            function populateTranscript() {
+                const transcript = [
+                    { speaker: "Speaker 1", text: "The quick brown fox jumps over the lazy dog.", color: "button-yellow" },
+                    { speaker: "Speaker 2", text: "How vexingly quick daft zebras jump!", color: "button-pink" },
+                    { speaker: "Speaker 1", text: "The five boxing wizards jump quickly.", color: "button-yellow" },
+                    { speaker: "Speaker 2", text: "Jackdaws love my big sphinx of quartz.", color: "button-pink" },
+                ];
+
+                const transcriptEntriesContainer = document.getElementById('transcriptEntries');
+                transcriptEntriesContainer.innerHTML = ''; // Clear existing entries
+                transcript.forEach(entry => {
+                    const entryElement = document.createElement('div');
+                    entryElement.className = 'transcript-entry';
+                    entryElement.innerHTML = `
+                        <div class="transcript-speaker ${entry.color}">${entry.speaker}</div>
+                        <div class="transcript-text">${entry.text}</div>
+                    `;
+                    transcriptEntriesContainer.appendChild(entryElement);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

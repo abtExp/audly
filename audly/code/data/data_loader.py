@@ -14,10 +14,7 @@ import audiofile
 
 from typing import Tuple, Optional
 
-from dask_cuda import LocalCUDACluster
-from dask.distributed import Client
-
-from audly.utils.base import BASE
+from audly.code.utils.base import BASE
 
 
 def dataloader(load_function):
@@ -27,17 +24,22 @@ def dataloader(load_function):
     
 class DATA_LOADER(BASE):
     def __init__(self, load_function):
-        self.cluster = LocalCUDACluster()
-        self.client = Client(self.cluster, processes=False)
         self.load_function = load_function
         
     def load_batch(self, features: list, targets: Optional[list])-> Tuple[np.ndarray, Optional[np.ndarray]]:
         x, y = self.load_function(features, targets)
-        
         return x, y
 
 
 @dataloader
-def audio_loader(features, targets):
-    signal, sampling_rate = audiofile.read(load_path)
-    return signal
+def audio_loader(features, targets=None):
+    x, y = [], []
+    
+    for feature in features:
+        signal, sampling_rate = audiofile.read(feature)
+        targ = []
+        x.append(signal)
+        y.append(targ)
+    x = np.array(x)
+    y = np.array(y)
+    return x, y
